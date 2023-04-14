@@ -165,6 +165,9 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     // build and compile shaders
     // -------------------------
@@ -182,21 +185,23 @@ int main() {
 
     Model brod("resources/objects/ship/SM_Ship12.obj");
     brod.SetShaderTextureNamePrefix("material.");
-
-    Model kofa("resources/objects/bucket/bucket.obj");
-    kofa.SetShaderTextureNamePrefix("material.");
+    stbi_set_flip_vertically_on_load(false);
+    Model dzek("resources/objects/JackSparrow/Jack Sparrow.obj");
+    dzek.SetShaderTextureNamePrefix("material.");
 
 
 
     //Set up water level
     float planeVertices[] = {
             50.0f, -1.0f,  50.0f,  2.0f, 0.0f,
-            -50.0f, -1.0f,  50.0f,  0.0f, 0.0f,
             -50.0f, -1.0f, -50.0f,  0.0f, 2.0f,
+            -50.0f, -1.0f,  50.0f,  0.0f, 0.0f,
+
 
             50.0f, -1.0f,  50.0f,  2.0f, 0.0f,
+            50.0f, -1.0f, -50.0f,  2.0f, 2.0f,
             -50.0f, -1.0f, -50.0f,  0.0f, 2.0f,
-            50.0f, -1.0f, -50.0f,  2.0f, 2.0f
+
     };
 
     unsigned int planeVAO, planeVBO;
@@ -273,12 +278,12 @@ int main() {
 
     vector<std::string> faces
             {
-                    FileSystem::getPath("resources/textures/interstellar_skybox/xpos.png"),
-                    FileSystem::getPath("resources/textures/interstellar_skybox/xneg.png"),
-                    FileSystem::getPath("resources/textures/interstellar_skybox/ypos.png"),
-                    FileSystem::getPath("resources/textures/interstellar_skybox/yneg.png"),
-                    FileSystem::getPath("resources/textures/interstellar_skybox/zpos.png"),
-                    FileSystem::getPath("resources/textures/interstellar_skybox/zneg.png")
+                    FileSystem::getPath("resources/textures/skybox/px.png"),
+                    FileSystem::getPath("resources/textures/skybox/nx.png"),
+                    FileSystem::getPath("resources/textures/skybox/py.png"),
+                    FileSystem::getPath("resources/textures/skybox/ny.png"),
+                    FileSystem::getPath("resources/textures/skybox/pz.png"),
+                    FileSystem::getPath("resources/textures/skybox/nz.png")
             };
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTexture = loadCubemap(faces);
@@ -395,6 +400,12 @@ int main() {
         modelShader.setMat4("model", model);
         brod.Draw(modelShader);
 
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.005f));
+        modelShader.setMat4("model", model);
+        dzek.Draw(modelShader);
+
+
 
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
@@ -499,6 +510,7 @@ void DrawImGui(ProgramState *programState) {
         ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
         ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 1.0);
         ImGui::DragFloat("pointLight.quadratic", &programState->pointLight.quadratic, 0.05, 0.0, 1.0);
+        ImGui::ColorEdit3("dirLight.diffuse", (float*)&programState->dirLight.direction);
         ImGui::End();
     }
 
@@ -578,7 +590,7 @@ unsigned int loadCubemap(vector<std::string> faces)
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         }
         else

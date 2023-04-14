@@ -1,0 +1,177 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 30.04.2020 12:32:41
+
+newmtl T_Wood03_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Wood03_Diffuse.png
+	map_Kd T_Wood03_Diffuse.png
+	map_bump T_Wood03_Normal.png
+	bump T_Wood03_Normal.png
+
+newmtl T_Ship12_Wood03_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ship12_Wood03_Diffuse.png
+	map_Kd T_Ship12_Wood03_Diffuse.png
+	map_bump T_Ship12_Wood03_Normal.png
+	bump T_Ship12_Wood03_Normal.png
+
+newmtl T_Ship12_Glass_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ship12_Glass_Diffuse.png
+	map_Kd T_Ship12_Glass_Diffuse.png
+
+newmtl T_Metal03_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Metal03_Diffuse.png
+	map_Kd T_Metal03_Diffuse.png
+	map_bump T_Metal03_Normal.png
+	bump T_Metal03_Normal.png
+
+newmtl T_Ship12_RearDetail_BC
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ship12_RearDetail_BC.png
+	map_Kd T_Ship12_RearDetail_BC.png
+	map_bump T_Ship12_RearDetail_N.png
+	bump T_Ship12_RearDetail_N.png
+
+
+newmtl T_RopesBlack_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_RopesBlack_Diffuse.png
+	map_Kd T_RopesBlack_Diffuse.png
+	map_bump T_RopesBlack_Normal.png
+	bump T_RopesBlack_Normal.png
+
+newmtl T_Ropes_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ropes_Diffuse.png
+	map_Kd T_Ropes_Diffuse.png
+	map_bump T_Ropes_Normal.png
+	bump T_Ropes_Normal.png
+
+newmtl T_Sails_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Sails_Diffuse.png
+	map_Kd T_Sails_Diffuse.png
+	map_bump T_Sails_Normal.png
+	bump T_Sails_Normal.png
+
+newmtl T_Ship12_SwivelGun_BC
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ship12_SwivelGun_BC.png
+	map_Kd T_Ship12_SwivelGun_BC.png
+	map_bump T_Ship12_SwivelGun_N.png
+	bump T_Ship12_SwivelGun_N.png
+
+newmtl T_Ship12_Wood02_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ship12_Wood02_Diffuse.png
+	map_Kd T_Ship12_Wood02_Diffuse.png
+	map_bump T_Ship12_Wood02_Normal.png
+	bump T_Ship12_Wood02_Normal.png
+
+newmtl T_Ship12_WoodBolts_Diffuse
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka T_Ship12_WoodBolts_Diffuse.png
+	map_Kd T_Ship12_WoodBolts_Diffuse.png
+	map_bump T_Ship12_WoodBolts_Normal.png
+	bump T_Ship12_WoodBolts_Normal.png

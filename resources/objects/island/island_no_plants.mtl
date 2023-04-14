@@ -1,0 +1,43 @@
+# Blender 3.5.0 MTL File: 'None'
+# www.blender.org
+
+newmtl material_1
+Ns 0.999999
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd Maps/snd1.jpg
+map_Bump Maps/terrain_mtl1_bumpamt.jpg
+
+newmtl material_1_palm_leaves
+Ns 0.999999
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd Maps/lv1.jpg
+
+newmtl material_1_palm_stems
+Ns 0.999999
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd Maps/plvs1c.jpg
+
+newmtl material_1_rocks
+Ns 0.999999
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd Maps/rc1.jpg

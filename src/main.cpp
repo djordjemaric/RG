@@ -48,6 +48,14 @@ struct PointLight {
     float quadratic;
 };
 
+struct DirLight {
+    glm::vec3 direction;
+
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+};
+
 struct ProgramState {
     glm::vec3 clearColor = glm::vec3(0);
     bool ImGuiEnabled = false;
@@ -56,6 +64,7 @@ struct ProgramState {
     glm::vec3 backpackPosition = glm::vec3(0.0f);
     float backpackScale = 1.0f;
     PointLight pointLight;
+    DirLight dirLight;
     ProgramState()
             : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
 
@@ -158,7 +167,8 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("resources/shaders/modelShader.vs", "resources/shaders/modelShader.fs");
+    Shader modelShader("resources/shaders/modelShader.vs", "resources/shaders/modelShader.fs");
+    Shader planeShader("resources/shaders/planeShader.vs", "resources/shaders/planeShader.fs");
 
     // load models
     // ------------------
@@ -168,17 +178,20 @@ int main() {
     Model vatra("resources/objects/fire2/Campfire.obj");
     vatra.SetShaderTextureNamePrefix("material.");
 
+    Model brod("resources/objects/ship/SM_Ship12.obj");
+    brod.SetShaderTextureNamePrefix("material.");
+
 
 
     //Set up water level
     float planeVertices[] = {
-            5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-            -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-            -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+            20.0f, -1.0f,  20.0f,  2.0f, 0.0f,
+            -20.0f, -1.0f,  20.0f,  0.0f, 0.0f,
+            -20.0f, -1.0f, -20.0f,  0.0f, 2.0f,
 
-            5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-            -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-            5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+            20.0f, -1.0f,  20.0f,  2.0f, 0.0f,
+            -20.0f, -1.0f, -20.0f,  0.0f, 2.0f,
+            20.0f, -1.0f, -20.0f,  2.0f, 2.0f
     };
 
     unsigned int planeVAO, planeVBO;
@@ -194,25 +207,30 @@ int main() {
     glBindVertexArray(0);
 
     unsigned int waterTexture = loadTexture("resources/textures/water_texture.jpg");
-
-
-
+    planeShader.use();
+    planeShader.setInt("texture1", 0);
 
     //Set up lights
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
-    pointLight.ambient = glm::vec3(0.1, 0.1, 0.1);
+    pointLight.position = glm::vec3(-1.5f, -0.1f, -1.0f);
+    pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
     pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
-    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
+    pointLight.specular = glm::vec3(0.5f);
 
     pointLight.constant = 1.0f;
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
+    DirLight& dirLight = programState->dirLight;
+    dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+    dirLight.ambient = glm::vec3(0.05f, 0.05f, 0.05f);
+    dirLight.diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
+    dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+
 
 
     // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     // -----------
@@ -233,42 +251,73 @@ int main() {
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // don't forget to enable shader before setting uniforms
-        ourShader.use();
-        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-        ourShader.setVec3("pointLight.position", pointLight.position);
-        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
-        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-        ourShader.setVec3("pointLight.specular", pointLight.specular);
-        ourShader.setFloat("pointLight.constant", pointLight.constant);
-        ourShader.setFloat("pointLight.linear", pointLight.linear);
-        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-        ourShader.setVec3("viewPosition", programState->camera.Position);
-        ourShader.setFloat("material.shininess", 32.0f);
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        //renderujemo vodu
+        planeShader.use();
+        glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        planeShader.setMat4("view", view);
+        planeShader.setMat4("projection", projection);
+
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, waterTexture);
+        model = glm::translate(model, glm::vec3(0.0f, 0.08f, 0.0f));
+
+        planeShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        // don't forget to enable shader before setting uniforms
+        modelShader.use();
+//        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+        modelShader.setVec3("pointLight.position", pointLight.position);
+        modelShader.setVec3("pointLight.ambient", pointLight.ambient);
+        modelShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+        modelShader.setVec3("pointLight.specular", pointLight.specular);
+        modelShader.setFloat("pointLight.constant", pointLight.constant);
+        modelShader.setFloat("pointLight.linear", pointLight.linear);
+        modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+        modelShader.setVec3("viewPosition", programState->camera.Position);
+
+        modelShader.setVec3("dirLight.direction", dirLight.direction);
+        modelShader.setVec3("dirLight.ambient", dirLight.ambient);
+        modelShader.setVec3("dirLight.diffuse", dirLight.diffuse);
+        modelShader.setVec3("dirLight.specular", dirLight.specular);
+        modelShader.setFloat("material.shininess", 64.0f);
+
+
+        // view/projection transformations
+        projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        view = programState->camera.GetViewMatrix();
+        modelShader.setMat4("projection", projection);
+        modelShader.setMat4("view", view);
 
         // render the loaded model
 
 
         //ostrvo
-        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.05f));
-        ourShader.setMat4("model", model);
-        ostrvo.Draw(ourShader);
-
+        model = glm::scale(model, glm::vec3(0.02f));
+        modelShader.setFloat("material.shininess", 2.0f);
+        modelShader.setMat4("model", model);
+        ostrvo.Draw(modelShader);
+        modelShader.setFloat("material.shininess", 32.0f);
 
         //logorska vatra
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-2.5f, 1.5f, -1.0f));
-        model = glm::scale(model, glm::vec3(0.8f));
-        ourShader.setMat4("model", model);
-        vatra.Draw(ourShader);
+        model = glm::translate(model, glm::vec3(-1.5f, -0.2f, -1.0f));
+        model = glm::scale(model, glm::vec3(0.15f));
+        modelShader.setMat4("model", model);
+        vatra.Draw(modelShader);
+
+        //brod
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-15.0f, -0.8f, 4.0f));
+        model = glm::scale(model, glm::vec3(0.2f));
+        modelShader.setMat4("model", model);
+        brod.Draw(modelShader);
 
         if (programState->ImGuiEnabled)
             DrawImGui(programState);

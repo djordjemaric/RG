@@ -177,6 +177,7 @@ int main() {
     Shader modelShader("resources/shaders/modelShader.vs", "resources/shaders/modelShader.fs");
     Shader planeShader("resources/shaders/planeShader.vs", "resources/shaders/planeShader.fs");
     Shader skyboxShader("resources/shaders/skyboxShader.vs", "resources/shaders/skyboxShader.fs");
+    Shader blendingShader("resources/shaders/blendingShader.vs", "resources/shaders/blendingShader.fs");
 
     // Ucitavanje i podesavanje modela
     // ------------------
@@ -293,25 +294,23 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    vector<std::string> faces_night
-            {
-                    FileSystem::getPath("resources/textures/night_skybox/px.png"),
-                    FileSystem::getPath("resources/textures/night_skybox/nx.png"),
-                    FileSystem::getPath("resources/textures/night_skybox/py.png"),
-                    FileSystem::getPath("resources/textures/night_skybox/ny.png"),
-                    FileSystem::getPath("resources/textures/night_skybox/pz.png"),
-                    FileSystem::getPath("resources/textures/night_skybox/nz.png")
-            };
+    vector<std::string> faces_night {
+        FileSystem::getPath("resources/textures/night_skybox/px.png"),
+        FileSystem::getPath("resources/textures/night_skybox/nx.png"),
+        FileSystem::getPath("resources/textures/night_skybox/py.png"),
+        FileSystem::getPath("resources/textures/night_skybox/ny.png"),
+        FileSystem::getPath("resources/textures/night_skybox/pz.png"),
+        FileSystem::getPath("resources/textures/night_skybox/nz.png")
+    };
 
-    vector<std::string> faces_day
-            {
-                    FileSystem::getPath("resources/textures/skybox/px.png"),
-                    FileSystem::getPath("resources/textures/skybox/nx.png"),
-                    FileSystem::getPath("resources/textures/skybox/py.png"),
-                    FileSystem::getPath("resources/textures/skybox/ny.png"),
-                    FileSystem::getPath("resources/textures/skybox/pz.png"),
-                    FileSystem::getPath("resources/textures/skybox/nz.png")
-            };
+    vector<std::string> faces_day {
+        FileSystem::getPath("resources/textures/skybox/px.png"),
+        FileSystem::getPath("resources/textures/skybox/nx.png"),
+        FileSystem::getPath("resources/textures/skybox/py.png"),
+        FileSystem::getPath("resources/textures/skybox/ny.png"),
+        FileSystem::getPath("resources/textures/skybox/pz.png"),
+        FileSystem::getPath("resources/textures/skybox/nz.png")
+    };
 
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTextureDay = loadCubemap(faces_day);
@@ -348,6 +347,37 @@ int main() {
     mesec.specular = glm::vec3(0.5f, 0.5f, 0.5f);
 
     DirLight& dirLight = programState->dirLight;
+
+
+    //biljka
+    float transparentVertices[] = {
+            // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+            1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+    stbi_set_flip_vertically_on_load(false);
+    unsigned int transparentTexture = loadTexture("resources/textures/biljka.png");
+    stbi_set_flip_vertically_on_load(true);
+
 
     // render loop
     // -----------
@@ -478,6 +508,33 @@ int main() {
         model = glm::scale(model, glm::vec3(0.005f));
         modelShader.setMat4("model", model);
         dzek.Draw(modelShader);
+
+
+
+        //renderujemo biljku
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+
+        blendingShader.use();
+        blendingShader.setInt("texture1", 0);
+        blendingShader.setMat4("projection", projection);
+        blendingShader.setMat4("view", view);
+
+        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
+        model = glm::translate(model, glm::vec3(-1.0f, 1.0f, 2.0f));
+        model = glm::scale(model, glm::vec3(1.5f));
+        blendingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        //zbog face culling vidimo samo sa jedne strane, renderujemo i rotirano
+//        model = glm::mat4(1.0f);
+//        model = glm::translate(model, glm::vec3(-1.0f, 1.0f, 2.0f));
+//        model = glm::scale(model, glm::vec3(4.0f));
+//        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0, 1, 0));
+//
+//        blendingShader.setMat4("model", model);
+//        glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
         //renderujemo skybox kao poslednji

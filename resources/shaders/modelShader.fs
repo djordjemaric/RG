@@ -35,6 +35,7 @@ uniform PointLight pointLight;
 uniform DirLight dirLight;
 uniform Material material;
 uniform vec3 viewPosition;
+uniform bool noc;
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -44,10 +45,11 @@ void main()
 {
     vec3 normal = normalize(Normal);
     vec3 viewDir = normalize(viewPosition - FragPos);
-    vec3 result = CalcPointLight(pointLight, normal, FragPos, viewDir);
-    result += CalcDirLight(dirLight, normal, viewDir);
+    vec3 result = CalcDirLight(dirLight, normal, viewDir);
+    if (noc) {
+        result += CalcPointLight(pointLight, normal, FragPos, viewDir);
+    }
     FragColor = vec4(result, 1.0);
-//     FragColor = texture(material.texture_diffuse1, TexCoords);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)

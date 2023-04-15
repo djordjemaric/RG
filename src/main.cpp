@@ -33,7 +33,7 @@ const unsigned int SCR_HEIGHT = 1080;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-
+bool noc = false;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -120,6 +120,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+
     // glfw window creation
     // --------------------
     GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Piratsko Ostrvo", nullptr, nullptr);
@@ -165,17 +166,19 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+
+    //Face culling, ne renderujemo stranice koje nisu vidljive
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    // build and compile shaders
+    // Kompajliranje sejdera
     // -------------------------
     Shader modelShader("resources/shaders/modelShader.vs", "resources/shaders/modelShader.fs");
     Shader planeShader("resources/shaders/planeShader.vs", "resources/shaders/planeShader.fs");
     Shader skyboxShader("resources/shaders/skyboxShader.vs", "resources/shaders/skyboxShader.fs");
 
-    // load models
+    // Ucitavanje i podesavanje modela
     // ------------------
     Model ostrvo("resources/objects/island/island_no_plants.obj");
     ostrvo.SetShaderTextureNamePrefix("material.");
@@ -185,35 +188,46 @@ int main() {
 
     Model brod("resources/objects/ship/SM_Ship12.obj");
     brod.SetShaderTextureNamePrefix("material.");
+
+    //Tekstura je obrnuta vec, pa iskljucujemo ovo
     stbi_set_flip_vertically_on_load(false);
     Model dzek("resources/objects/JackSparrow/Jack Sparrow.obj");
     dzek.SetShaderTextureNamePrefix("material.");
+    stbi_set_flip_vertically_on_load(true);
 
 
 
-    //Set up water level
+    //Ravan koja predstavlja vodu
     float planeVertices[] = {
-            50.0f, -1.0f,  50.0f,  2.0f, 0.0f,
-            -50.0f, -1.0f, -50.0f,  0.0f, 2.0f,
-            -50.0f, -1.0f,  50.0f,  0.0f, 0.0f,
+            50.0f, -1.0f,  50.0f,  2.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            -50.0f, -1.0f, -50.0f,  0.0f, 2.0f, 0.0f, 1.0f, 0.0f,
+            -50.0f, -1.0f,  50.0f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 
 
-            50.0f, -1.0f,  50.0f,  2.0f, 0.0f,
-            50.0f, -1.0f, -50.0f,  2.0f, 2.0f,
-            -50.0f, -1.0f, -50.0f,  0.0f, 2.0f,
+            50.0f, -1.0f,  50.0f,  2.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            50.0f, -1.0f, -50.0f,  2.0f, 2.0f, 0.0f, 1.0f, 0.0f,
+            -50.0f, -1.0f, -50.0f,  0.0f, 2.0f, 0.0f, 1.0f, 0.0f
 
     };
 
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
+
     glBindVertexArray(planeVAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+
     glBindVertexArray(0);
 
     unsigned int waterTexture = loadTexture("resources/textures/water_texture.jpg");
@@ -270,13 +284,26 @@ int main() {
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
+
     glBindVertexArray(skyboxVAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-    vector<std::string> faces
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    vector<std::string> faces_night
+            {
+                    FileSystem::getPath("resources/textures/night_skybox/px.png"),
+                    FileSystem::getPath("resources/textures/night_skybox/nx.png"),
+                    FileSystem::getPath("resources/textures/night_skybox/py.png"),
+                    FileSystem::getPath("resources/textures/night_skybox/ny.png"),
+                    FileSystem::getPath("resources/textures/night_skybox/pz.png"),
+                    FileSystem::getPath("resources/textures/night_skybox/nz.png")
+            };
+
+    vector<std::string> faces_day
             {
                     FileSystem::getPath("resources/textures/skybox/px.png"),
                     FileSystem::getPath("resources/textures/skybox/nx.png"),
@@ -285,13 +312,16 @@ int main() {
                     FileSystem::getPath("resources/textures/skybox/pz.png"),
                     FileSystem::getPath("resources/textures/skybox/nz.png")
             };
+
     stbi_set_flip_vertically_on_load(false);
-    unsigned int cubemapTexture = loadCubemap(faces);
+    unsigned int cubemapTextureDay = loadCubemap(faces_day);
+    unsigned  int cubemapTextureNight = loadCubemap(faces_night);
+    stbi_set_flip_vertically_on_load(true);
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
 
-    //Set up lights
+    //Podesavamo svetlo koje izvire iz vatre
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(-1.5f, -0.1f, -1.0f);
     pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
@@ -302,20 +332,27 @@ int main() {
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
+
+    //Podesavamo sunce
+    DirLight sunce{};
+//    DirLight *sunce = new DirLight{};
+    sunce.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
+    sunce.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+    sunce.diffuse = glm::vec3(1, 0.9, 0.6);
+    sunce.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+
+    DirLight mesec{};
+    mesec.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
+    mesec.ambient = glm::vec3(0.02f, 0.02f, 0.02f);
+    mesec.diffuse = glm::vec3(0.1, 0.1, 0.1);
+    mesec.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+
     DirLight& dirLight = programState->dirLight;
-    dirLight.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
-    dirLight.ambient = glm::vec3(0.05f, 0.05f, 0.05f);
-    dirLight.diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
-    dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
-
-
-
-    // draw in wireframe
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
+
         // per-frame time logic
         // --------------------
         float currentFrame = glfwGetTime();
@@ -333,6 +370,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //renderujemo vodu
+        //----------
         planeShader.use();
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
@@ -343,14 +381,21 @@ int main() {
         glBindVertexArray(planeVAO);
         glBindTexture(GL_TEXTURE_2D, waterTexture);
         model = glm::translate(model, glm::vec3(0.0f, 0.08f, 0.0f));
-
         planeShader.setMat4("model", model);
+
+
+        planeShader.setVec3("dirLight.direction", dirLight.direction);
+        planeShader.setVec3("dirLight.ambient", dirLight.ambient);
+        planeShader.setVec3("dirLight.diffuse", dirLight.diffuse);
+        planeShader.setBool("noc", noc);
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
+        //---------------
 
         // don't forget to enable shader before setting uniforms
         modelShader.use();
-//        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+        modelShader.setBool("noc", noc);
         modelShader.setVec3("pointLight.position", pointLight.position);
         modelShader.setVec3("pointLight.ambient", pointLight.ambient);
         modelShader.setVec3("pointLight.diffuse", pointLight.diffuse);
@@ -360,11 +405,23 @@ int main() {
         modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);
         modelShader.setVec3("viewPosition", programState->camera.Position);
 
+        if (noc) {
+            dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
+            dirLight.ambient = glm::vec3(0.02f, 0.02f, 0.02f);
+            dirLight.diffuse = glm::vec3(0.1, 0.1, 0.1);
+            dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+        } else {
+            dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
+            dirLight.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+            dirLight.diffuse = glm::vec3(1, 0.9, 0.6);
+            dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+        }
+
         modelShader.setVec3("dirLight.direction", dirLight.direction);
         modelShader.setVec3("dirLight.ambient", dirLight.ambient);
         modelShader.setVec3("dirLight.diffuse", dirLight.diffuse);
         modelShader.setVec3("dirLight.specular", dirLight.specular);
-        modelShader.setFloat("material.shininess", 64.0f);
+        modelShader.setFloat("material.shininess", 16.0f);
 
 
         // view/projection transformations
@@ -380,10 +437,12 @@ int main() {
         //ostrvo
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
+//        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0, 1, 0));
         model = glm::scale(model, glm::vec3(0.02f));
-        modelShader.setFloat("material.shininess", 2.0f);
+        modelShader.setFloat("material.shininess", 4.0f);
         modelShader.setMat4("model", model);
         ostrvo.Draw(modelShader);
+
         modelShader.setFloat("material.shininess", 32.0f);
 
         //logorska vatra
@@ -393,20 +452,35 @@ int main() {
         modelShader.setMat4("model", model);
         vatra.Draw(modelShader);
 
-        //brod
+        //brod1
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-15.0f, -0.8f, 4.0f));
+//        model = glm::translate(model, glm::vec3(-15.0f, -0.8f, 4.0f));
+        model = glm::translate(model, glm::vec3(-1.5f, -0.8f, -20.0f));
+        model = glm::rotate(model, glm::radians(-75.0f), glm::vec3(0, 1.0f, 0));
+        model = glm::scale(model, glm::vec3(0.35f));
+        modelShader.setMat4("model", model);
+        brod.Draw(modelShader);
+
+        //brod2
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-15.0f, -0.3f, 4.0f));
+        model = glm::rotate(model, glm::radians(-180.0f), glm::vec3(0, 0, 1));
+        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(1, 0, 0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0, 1, 0));
         model = glm::scale(model, glm::vec3(0.2f));
         modelShader.setMat4("model", model);
         brod.Draw(modelShader);
 
+
         model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, -0.12f, -2.0f));
+        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
         model = glm::scale(model, glm::vec3(0.005f));
         modelShader.setMat4("model", model);
         dzek.Draw(modelShader);
 
 
-
+        //renderujemo skybox kao poslednji
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
@@ -415,7 +489,14 @@ int main() {
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
+        unsigned int activeSkybox;
+        if (noc) {
+            activeSkybox = cubemapTextureNight;
+        } else {
+            activeSkybox = cubemapTextureDay;
+        }
+        glBindTexture(GL_TEXTURE_CUBE_MAP, activeSkybox);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
@@ -510,7 +591,7 @@ void DrawImGui(ProgramState *programState) {
         ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
         ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 1.0);
         ImGui::DragFloat("pointLight.quadratic", &programState->pointLight.quadratic, 0.05, 0.0, 1.0);
-        ImGui::ColorEdit3("dirLight.diffuse", (float*)&programState->dirLight.direction);
+        ImGui::DragFloat3("dirLight.diffuse", (float*)&programState->dirLight.direction);
         ImGui::End();
     }
 
@@ -540,6 +621,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
     if(key == GLFW_KEY_M && action == GLFW_PRESS)
         programState->CameraMouseMovementUpdateEnabled = !programState->CameraMouseMovementUpdateEnabled;
+
+    if(key == GLFW_KEY_N && action == GLFW_PRESS)
+        noc = !noc;
 }
 
 

@@ -106,6 +106,12 @@ void ProgramState::LoadFromFile(std::string filename) {
 
 ProgramState *programState;
 
+bool hdr = true;
+
+bool hdrKeyPressed = false;
+
+float exposure = 1.0;
+
 void DrawImGui(ProgramState *programState);
 
 int main() {
@@ -123,7 +129,8 @@ int main() {
 
     // glfw window creation
     // --------------------
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Piratsko Ostrvo", nullptr, nullptr);
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Piratsko Ostrvo", monitor, nullptr);
     if (window == nullptr) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -178,6 +185,7 @@ int main() {
     Shader planeShader("resources/shaders/planeShader.vs", "resources/shaders/planeShader.fs");
     Shader skyboxShader("resources/shaders/skyboxShader.vs", "resources/shaders/skyboxShader.fs");
     Shader blendingShader("resources/shaders/blendingShader.vs", "resources/shaders/blendingShader.fs");
+    Shader hdrShader("resources/shaders/hdrShader.vs", "resources/shaders/hdrShader.fs");
 
     // Ucitavanje i podesavanje modela
     // ------------------
@@ -324,7 +332,7 @@ int main() {
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(-1.5f, 0.0f, -1.0f);
     pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
-    pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
+    pointLight.diffuse = glm::vec3(6, 6, 6);
     pointLight.specular = glm::vec3(0.5f);
 
     pointLight.constant = 1.0f;
@@ -379,6 +387,64 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
 
 
+    //quad
+
+    float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, //4
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, //2
+            1.0f,  1.0f, 0.0f, 1.0f, 1.0f, //1
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f, //3
+    };
+
+    float quadVertices2[] = {
+            //1 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, //1
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, //2
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f, //3
+
+            1.0f,  1.0f, 0.0f, 1.0f, 1.0f, //1
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, //4
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f //2
+    };
+    // setup plane VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+
+    // configure floating point framebuffer
+    // ------------------------------------
+    unsigned int hdrFBO;
+    glGenFramebuffers(1, &hdrFBO);
+    // create floating point color buffer
+    unsigned int colorBuffer;
+    glGenTextures(1, &colorBuffer);
+    glBindTexture(GL_TEXTURE_2D, colorBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // create depth buffer (renderbuffer)
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+    // attach buffers
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -388,6 +454,18 @@ int main() {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        if (noc) {
+            dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
+            dirLight.ambient = glm::vec3(0.02f, 0.02f, 0.02f);
+            dirLight.diffuse = glm::vec3(0.1, 0.1, 0.1);
+            dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+        } else {
+            dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
+            dirLight.ambient = glm::vec3(0.35f, 0.35f, 0.35f);
+            dirLight.diffuse = glm::vec3(1, 0.8, 0.1);
+            dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+        }
 
         // input
         // -----
@@ -399,6 +477,10 @@ int main() {
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        //------------------------------------------------------------
+        //bind nas framebuffer
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //renderujemo vodu
         //----------
         planeShader.use();
@@ -418,7 +500,7 @@ int main() {
         planeShader.setVec3("dirLight.ambient", dirLight.ambient);
         planeShader.setVec3("dirLight.diffuse", dirLight.diffuse);
         planeShader.setVec3("dirLight.specular", dirLight.specular);
-        planeShader.setFloat("shininess", 2.0f);
+        planeShader.setFloat("shininess", 1.0f);
         planeShader.setBool("noc", noc);
 
 
@@ -438,24 +520,14 @@ int main() {
         modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);
 
 
-        //TODO: treperenje vatre 
+        //TODO: treperenje vatre
 //        modelShader.setFloat("pointLight.constant", glm::clamp((cos( glfwGetTime() * 2 ) * 0.5 + 0.5 ), 0.7, 1.0));
 //        modelShader.setFloat("pointLight.linear", pointLight.linear);
 //        modelShader.setFloat("pointLight.linear", ((sin( glfwGetTime() *  2)) * 0.5 + 0.5 ));
 //        modelShader.setFloat("pointLight.quadratic", ((cos( glfwGetTime() * 2 )) * 0.5 + 0.5 ));
         modelShader.setVec3("viewPosition", programState->camera.Position);
 
-        if (noc) {
-            dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
-            dirLight.ambient = glm::vec3(0.02f, 0.02f, 0.02f);
-            dirLight.diffuse = glm::vec3(0.1, 0.1, 0.1);
-            dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
-        } else {
-            dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
-            dirLight.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-            dirLight.diffuse = glm::vec3(1, 0.9, 0.6);
-            dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
-        }
+
 
         modelShader.setVec3("dirLight.direction", dirLight.direction);
         modelShader.setVec3("dirLight.ambient", dirLight.ambient);
@@ -568,6 +640,22 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //kraj renderovanja u nas frejmbafer
+        //--------------------------------------------
+
+
+        //renderujemo quad u hdru
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        hdrShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, colorBuffer);
+        hdrShader.setInt("hdr", hdr);
+        hdrShader.setFloat("exposure", exposure);
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
+
 
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
@@ -605,6 +693,28 @@ void processInput(GLFWwindow *window) {
         programState->camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !hdrKeyPressed)
+    {
+        hdr = !hdr;
+        hdrKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    {
+        hdrKeyPressed = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (exposure > 0.0f)
+            exposure -= 0.001f;
+        else
+            exposure = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        exposure += 0.001f;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

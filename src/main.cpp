@@ -33,10 +33,16 @@ const unsigned int SCR_HEIGHT = 1080;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-bool noc = false;
+
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+bool noc = false;
+
+//HDR
+bool hdr = false;
+float exposure = 1.0;
 
 struct PointLight {
     glm::vec3 position;
@@ -62,7 +68,7 @@ struct ProgramState {
     bool ImGuiEnabled = false;
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
-    glm::vec3 backpackPosition = glm::vec3(0.0f);
+    glm::vec3 backpackPosition = glm::vec3(-1.0f, 1.0f, 2.0f);
     float backpackScale = 1.0f;
     PointLight pointLight;
     DirLight dirLight;
@@ -105,11 +111,6 @@ void ProgramState::LoadFromFile(std::string filename) {
 }
 
 ProgramState *programState;
-
-bool hdr = true;
-
-bool hdrKeyPressed = false;
-float exposure = 1.0;
 
 void DrawImGui(ProgramState *programState);
 
@@ -338,21 +339,6 @@ int main() {
     pointLight.linear = 0.5f;
     pointLight.quadratic = 1.1f;
 
-
-    //Podesavamo sunce
-    DirLight sunce{};
-//    DirLight *sunce = new DirLight{};
-    sunce.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
-    sunce.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-    sunce.diffuse = glm::vec3(1, 0.9, 0.6);
-    sunce.specular = glm::vec3(0.5f, 0.5f, 0.5f);
-
-    DirLight mesec{};
-    mesec.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
-    mesec.ambient = glm::vec3(0.02f, 0.02f, 0.02f);
-    mesec.diffuse = glm::vec3(0.1, 0.1, 0.1);
-    mesec.specular = glm::vec3(0.5f, 0.5f, 0.5f);
-
     DirLight& dirLight = programState->dirLight;
 
 
@@ -442,7 +428,12 @@ int main() {
         std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
+    glm::vec3 biljkePozicije[] = {
+            glm::vec3(0, 0.18f, 1.35f),
+            glm::vec3(-0.5f, 0.18f, 1.40f),
+            glm::vec3(0.5f, 0.18f, 1.40f),
+            glm::vec3(-1.0f, 0.18f, 1.35f)
+    };
 
     // render loop
     // -----------
@@ -582,17 +573,20 @@ int main() {
         modelShader.setMat4("model", model);
         brod.Draw(modelShader);
 
-
+        //dzek
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.0f, -0.12f, -2.0f));
         model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
         model = glm::scale(model, glm::vec3(0.005f));
         modelShader.setMat4("model", model);
+        modelShader.setFloat("material.shininess", 16.0f);
         dzek.Draw(modelShader);
 
 
 
         //renderujemo biljku
+        //iskljucujemo face culling da bi se videla sa obe strane
+        glDisable(GL_CULL_FACE);
         glBindVertexArray(transparentVAO);
         glBindTexture(GL_TEXTURE_2D, transparentTexture);
 
@@ -601,21 +595,48 @@ int main() {
         blendingShader.setMat4("projection", projection);
         blendingShader.setMat4("view", view);
 
-        model = glm::mat4(1.0f);
+        /*model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
-        model = glm::translate(model, glm::vec3(-1.0f, 1.0f, 2.0f));
-        model = glm::scale(model, glm::vec3(1.5f));
+        model = glm::translate(model, glm::vec3(0, 0.18f, 1.35f));
+        model = glm::scale(model, glm::vec3(0.8f));
         blendingShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        //zbog face culling vidimo samo sa jedne strane, renderujemo i rotirano
-//        model = glm::mat4(1.0f);
-//        model = glm::translate(model, glm::vec3(-1.0f, 1.0f, 2.0f));
-//        model = glm::scale(model, glm::vec3(4.0f));
-//        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0, 1, 0));
-//
-//        blendingShader.setMat4("model", model);
-//        glDrawArrays(GL_TRIANGLES, 0, 6);
+        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
+        model = glm::translate(model, glm::vec3(0.5f, 0.18f, 1.4f));
+        model = glm::scale(model, glm::vec3(0.8f));
+        blendingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
+        model = glm::translate(model, glm::vec3(-0.5f, 0.18f, 1.4f));
+        model = glm::scale(model, glm::vec3(0.8f));
+        blendingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+*/
+
+        for (int i = 0; i < 4; i++) {
+            model = glm::mat4(1.0f);
+            model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
+            model = glm::translate(model, biljkePozicije[i]);
+            model = glm::scale(model, glm::vec3(0.8f));
+            blendingShader.use();
+            blendingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        for (int i = 0; i < 8; i++) {
+            model = glm::mat4(1.0f);
+//            model = glm::translate(model, glm::vec3(0.7f, 0.18f, 3.0f));
+            model = glm::translate(model, glm::vec3(-2.2f, 0.08f, 1.5f));
+            model = glm::scale(model, glm::vec3(0.8f));
+            model = glm::rotate(model, glm::radians((float)i * (-45.0f)), glm::vec3(0, 1, 0));
+            blendingShader.use();
+            blendingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        glEnable(GL_CULL_FACE);
 
 
         //renderujemo skybox kao poslednji

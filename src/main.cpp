@@ -322,7 +322,7 @@ int main() {
 
     //Podesavamo svetlo koje izvire iz vatre
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(-1.5f, -0.1f, -1.0f);
+    pointLight.position = glm::vec3(-1.5f, 0.0f, -1.0f);
     pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
     pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
     pointLight.specular = glm::vec3(0.5f);
@@ -417,7 +417,10 @@ int main() {
         planeShader.setVec3("dirLight.direction", dirLight.direction);
         planeShader.setVec3("dirLight.ambient", dirLight.ambient);
         planeShader.setVec3("dirLight.diffuse", dirLight.diffuse);
+        planeShader.setVec3("dirLight.specular", dirLight.specular);
+        planeShader.setFloat("shininess", 2.0f);
         planeShader.setBool("noc", noc);
+
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
@@ -433,6 +436,13 @@ int main() {
         modelShader.setFloat("pointLight.constant", pointLight.constant);
         modelShader.setFloat("pointLight.linear", pointLight.linear);
         modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+
+
+        //TODO: treperenje vatre 
+//        modelShader.setFloat("pointLight.constant", glm::clamp((cos( glfwGetTime() * 2 ) * 0.5 + 0.5 ), 0.7, 1.0));
+//        modelShader.setFloat("pointLight.linear", pointLight.linear);
+//        modelShader.setFloat("pointLight.linear", ((sin( glfwGetTime() *  2)) * 0.5 + 0.5 ));
+//        modelShader.setFloat("pointLight.quadratic", ((cos( glfwGetTime() * 2 )) * 0.5 + 0.5 ));
         modelShader.setVec3("viewPosition", programState->camera.Position);
 
         if (noc) {
@@ -646,8 +656,8 @@ void DrawImGui(ProgramState *programState) {
         ImGui::DragFloat("Backpack scale", &programState->backpackScale, 0.05, 0.1, 4.0);
 
         ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
-        ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 1.0);
-        ImGui::DragFloat("pointLight.quadratic", &programState->pointLight.quadratic, 0.05, 0.0, 1.0);
+        ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 0.5);
+        ImGui::DragFloat("pointLight.quadratic", &programState->pointLight.quadratic, 0.05, 0.0, 0.5);
         ImGui::DragFloat3("dirLight.diffuse", (float*)&programState->dirLight.direction);
         ImGui::End();
     }

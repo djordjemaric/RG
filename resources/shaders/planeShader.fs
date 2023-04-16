@@ -10,10 +10,12 @@ struct DirLight {
 
     vec3 ambient;
     vec3 diffuse;
+    vec3 specular;
 };
 
 
 uniform sampler2D texture1;
+uniform float shininess;
 uniform DirLight dirLight;
 uniform vec3 viewPosition;
 uniform bool noc;
@@ -24,11 +26,11 @@ void main()
     vec3 normal = normalize(Normal);
     vec3 viewDir = normalize(viewPosition - FragPos);
     vec3 result = CalcDirLight(dirLight, normal, viewDir);
-    if (noc) {
+//     if (noc) {
         FragColor = vec4(result, 1.0);
-    } else {
-        FragColor = texture(texture1, TexCoords);
-    }
+//     } else {
+//         FragColor = texture(texture1, TexCoords);
+//     }
 }
 
 
@@ -38,11 +40,11 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-//     vec3 halfwayDir = normalize(lightDir + viewDir);
-//     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    // combine results
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+//     combine results
     vec3 ambient = light.ambient * vec3(texture(texture1, TexCoords));
     vec3 diffuse = light.diffuse * diff * vec3(texture(texture1, TexCoords));
-//     vec3 specular = light.specular * spec * vec3(texture(material.texture_specular1, TexCoords));
-    return (ambient + diffuse);
+    vec3 specular = light.specular * spec * vec3(texture(texture1, TexCoords));
+    return (ambient + diffuse + specular);
 }

@@ -69,14 +69,12 @@ struct ProgramState {
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
     glm::vec3 backpackPosition = glm::vec3(-1.0f, 1.0f, 2.0f);
-    float backpackScale = 1.0f;
     PointLight pointLight;
     DirLight dirLight;
     ProgramState()
             : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
 
     void SaveToFile(std::string filename);
-
     void LoadFromFile(std::string filename);
 };
 
@@ -205,18 +203,17 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
 
 
-
     //Ravan koja predstavlja vodu
     float planeVertices[] = {
-            50.0f, -1.0f,  50.0f,  2.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-            -50.0f, -1.0f, -50.0f,  0.0f, 2.0f, 0.0f, 1.0f, 0.0f,
-            -50.0f, -1.0f,  50.0f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        //      vertex           texture        normal
+        50.0f, -1.0f,  50.0f,  2.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        -50.0f, -1.0f, -50.0f,  0.0f, 2.0f, 0.0f, 1.0f, 0.0f,
+        -50.0f, -1.0f,  50.0f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 
 
-            50.0f, -1.0f,  50.0f,  2.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-            50.0f, -1.0f, -50.0f,  2.0f, 2.0f, 0.0f, 1.0f, 0.0f,
-            -50.0f, -1.0f, -50.0f,  0.0f, 2.0f, 0.0f, 1.0f, 0.0f
-
+        50.0f, -1.0f,  50.0f,  2.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        50.0f, -1.0f, -50.0f,  2.0f, 2.0f, 0.0f, 1.0f, 0.0f,
+        -50.0f, -1.0f, -50.0f,  0.0f, 2.0f, 0.0f, 1.0f, 0.0f
     };
 
     unsigned int planeVAO, planeVBO;
@@ -244,7 +241,7 @@ int main() {
     planeShader.setInt("texture1", 0);
 
 
-
+    // parametri za skybox
     float skyboxVertices[] = {
             // positions
             -1.0f,  1.0f, -1.0f,
@@ -328,22 +325,8 @@ int main() {
     skyboxShader.setInt("skybox", 0);
 
 
-    //Podesavamo svetlo koje izvire iz vatre
-    PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(-1.5f, 0.0f, -1.0f);
-    pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
-    pointLight.diffuse = glm::vec3(20, 13, 2);
-    pointLight.specular = glm::vec3(0.5f);
-
-    pointLight.constant = 1.0f;
-    pointLight.linear = 0.5f;
-    pointLight.quadratic = 1.1f;
-
-    DirLight& dirLight = programState->dirLight;
-
-
     //biljka
-    float transparentVertices[] = {
+    float transparentVertices2[] = {
             // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
             0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
             0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
@@ -354,6 +337,24 @@ int main() {
             1.0f,  0.5f,  0.0f,  1.0f,  0.0f
     };
 
+    float transparentVertices[] = {
+            // positions          texture        normal
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+            0.0f, -0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+            1.0f,  0.5f,  0.0f,  1.0f,  0.0f,   0.0f,  1.0f,  0.0f
+    };
+
+
+    glm::vec3 biljkePozicije[] = {
+            glm::vec3(0, 0.18f, 1.35f),
+            glm::vec3(-0.5f, 0.18f, 1.40f),
+            glm::vec3(0.5f, 0.18f, 1.40f),
+            glm::vec3(-1.0f, 0.18f, 1.35f)
+    };
 
     unsigned int transparentVAO, transparentVBO;
     glGenVertexArrays(1, &transparentVAO);
@@ -361,19 +362,25 @@ int main() {
     glBindVertexArray(transparentVAO);
     glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
     glBindVertexArray(0);
+    
+    
 
     stbi_set_flip_vertically_on_load(false);
     unsigned int transparentTexture = loadTexture("resources/textures/biljka.png");
     stbi_set_flip_vertically_on_load(true);
 
 
-    //quad
-
+    //Quad
     float quadVertices[] = {
             // positions        // texture Coords
             -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, //4
@@ -382,15 +389,6 @@ int main() {
             1.0f, -1.0f, 0.0f, 1.0f, 0.0f, //3
     };
 
-    float quadVertices2[] = {
-            //1 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, //1
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, //2
-            1.0f, -1.0f, 0.0f, 1.0f, 0.0f, //3
-
-            1.0f,  1.0f, 0.0f, 1.0f, 1.0f, //1
-            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, //4
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f //2
-    };
     // setup plane VAO
     unsigned int quadVAO, quadVBO;
     glGenVertexArrays(1, &quadVAO);
@@ -428,12 +426,22 @@ int main() {
         std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glm::vec3 biljkePozicije[] = {
-            glm::vec3(0, 0.18f, 1.35f),
-            glm::vec3(-0.5f, 0.18f, 1.40f),
-            glm::vec3(0.5f, 0.18f, 1.40f),
-            glm::vec3(-1.0f, 0.18f, 1.35f)
-    };
+
+    //Svetla
+
+    //Podesavamo svetlo koje izvire iz vatre
+    PointLight& pointLight = programState->pointLight;
+    pointLight.position = glm::vec3(-1.5f, 0.0f, -1.0f);
+    pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
+    pointLight.diffuse = glm::vec3(20, 13, 2);
+    pointLight.specular = glm::vec3(0.5f);
+
+    pointLight.constant = 1.0f;
+    pointLight.linear = 0.5f;
+    pointLight.quadratic = 1.1f;
+
+    DirLight& dirLight = programState->dirLight;
+
 
     // render loop
     // -----------
@@ -445,12 +453,15 @@ int main() {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // postavljanje svetla za odgovarajuci deo dana
         if (noc) {
+            //mesec
             dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
             dirLight.ambient = glm::vec3(0.02f, 0.02f, 0.02f);
             dirLight.diffuse = glm::vec3(0.1, 0.1, 0.1);
             dirLight.specular = glm::vec3(0.5f, 0.5f, 0.5f);
         } else {
+            //sunce
             dirLight.direction = glm::vec3(-2.0f, -1.0f, -0.3f);
             dirLight.ambient = glm::vec3(0.35f, 0.35f, 0.35f);
             dirLight.diffuse = glm::vec3(1, 0.8, 0.1);
@@ -468,9 +479,10 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //------------------------------------------------------------
-        //bind nas framebuffer
+        //bindujemo nas framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         //renderujemo vodu
         //----------
         planeShader.use();
@@ -508,16 +520,7 @@ int main() {
         modelShader.setFloat("pointLight.constant", pointLight.constant);
         modelShader.setFloat("pointLight.linear", pointLight.linear);
         modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-
-
-        //TODO: treperenje vatre
-//        modelShader.setFloat("pointLight.constant", glm::clamp((cos( glfwGetTime() * 2 ) * 0.5 + 0.5 ), 0.7, 1.0));
-//        modelShader.setFloat("pointLight.linear", pointLight.linear);
-//        modelShader.setFloat("pointLight.linear", ((sin( glfwGetTime() *  2)) * 0.5 + 0.5 ));
-//        modelShader.setFloat("pointLight.quadratic", ((cos( glfwGetTime() * 2 )) * 0.5 + 0.5 ));
         modelShader.setVec3("viewPosition", programState->camera.Position);
-
-
 
         modelShader.setVec3("dirLight.direction", dirLight.direction);
         modelShader.setVec3("dirLight.ambient", dirLight.ambient);
@@ -533,13 +536,10 @@ int main() {
         modelShader.setMat4("projection", projection);
         modelShader.setMat4("view", view);
 
-        // render the loaded model
-
 
         //ostrvo
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
-//        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0, 1, 0));
         model = glm::scale(model, glm::vec3(0.02f));
         modelShader.setFloat("material.shininess", 4.0f);
         modelShader.setMat4("model", model);
@@ -556,7 +556,6 @@ int main() {
 
         //brod1
         model = glm::mat4(1.0f);
-//        model = glm::translate(model, glm::vec3(-15.0f, -0.8f, 4.0f));
         model = glm::translate(model, glm::vec3(-1.5f, -0.8f, -20.0f));
         model = glm::rotate(model, glm::radians(-75.0f), glm::vec3(0, 1.0f, 0));
         model = glm::scale(model, glm::vec3(0.35f));
@@ -584,7 +583,7 @@ int main() {
 
 
 
-        //renderujemo biljku
+        //renderujemo biljke
         //iskljucujemo face culling da bi se videla sa obe strane
         glDisable(GL_CULL_FACE);
         glBindVertexArray(transparentVAO);
@@ -595,28 +594,14 @@ int main() {
         blendingShader.setMat4("projection", projection);
         blendingShader.setMat4("view", view);
 
-        /*model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
-        model = glm::translate(model, glm::vec3(0, 0.18f, 1.35f));
-        model = glm::scale(model, glm::vec3(0.8f));
-        blendingShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        blendingShader.setVec3("dirLight.direction", dirLight.direction);
+        blendingShader.setVec3("dirLight.ambient", dirLight.ambient);
+        blendingShader.setVec3("dirLight.diffuse", dirLight.diffuse);
+        blendingShader.setVec3("dirLight.specular", dirLight.specular);
+        blendingShader.setFloat("shininess", 32.0f);
+        blendingShader.setBool("noc", noc);
 
-        model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
-        model = glm::translate(model, glm::vec3(0.5f, 0.18f, 1.4f));
-        model = glm::scale(model, glm::vec3(0.8f));
-        blendingShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
-        model = glm::translate(model, glm::vec3(-0.5f, 0.18f, 1.4f));
-        model = glm::scale(model, glm::vec3(0.8f));
-        blendingShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-*/
-
+       //biljke ispred kamena
         for (int i = 0; i < 4; i++) {
             model = glm::mat4(1.0f);
             model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0, 1, 0));
@@ -626,9 +611,9 @@ int main() {
             blendingShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
+        //kruzna biljka
         for (int i = 0; i < 8; i++) {
             model = glm::mat4(1.0f);
-//            model = glm::translate(model, glm::vec3(0.7f, 0.18f, 3.0f));
             model = glm::translate(model, glm::vec3(-2.2f, 0.08f, 1.5f));
             model = glm::scale(model, glm::vec3(0.8f));
             model = glm::rotate(model, glm::radians((float)i * (-45.0f)), glm::vec3(0, 1, 0));
@@ -775,7 +760,6 @@ void DrawImGui(ProgramState *programState) {
         ImGui::SliderFloat("Float slider", &f, 0.0, 1.0);
         ImGui::ColorEdit3("Background color", (float *) &programState->clearColor);
         ImGui::DragFloat3("Backpack position", (float*)&programState->backpackPosition);
-        ImGui::DragFloat("Backpack scale", &programState->backpackScale, 0.05, 0.1, 4.0);
 
         ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
         ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 0.5);
@@ -808,8 +792,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
-    if (key == GLFW_KEY_M && action == GLFW_PRESS)
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         programState->CameraMouseMovementUpdateEnabled = !programState->CameraMouseMovementUpdateEnabled;
+    }
 
     if (key == GLFW_KEY_N && action == GLFW_PRESS){
         noc = !noc;

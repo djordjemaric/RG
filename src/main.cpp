@@ -109,7 +109,6 @@ ProgramState *programState;
 bool hdr = true;
 
 bool hdrKeyPressed = false;
-
 float exposure = 1.0;
 
 void DrawImGui(ProgramState *programState);
@@ -332,12 +331,12 @@ int main() {
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(-1.5f, 0.0f, -1.0f);
     pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
-    pointLight.diffuse = glm::vec3(6, 6, 6);
+    pointLight.diffuse = glm::vec3(20, 13, 2);
     pointLight.specular = glm::vec3(0.5f);
 
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.032f;
+    pointLight.linear = 0.5f;
+    pointLight.quadratic = 1.1f;
 
 
     //Podesavamo sunce
@@ -645,7 +644,7 @@ int main() {
         //--------------------------------------------
 
 
-        //renderujemo quad u hdru
+        //HDR - renderujemo quad
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         hdrShader.use();
         glActiveTexture(GL_TEXTURE0);
@@ -694,26 +693,18 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(RIGHT, deltaTime);
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !hdrKeyPressed)
-    {
-        hdr = !hdr;
-        hdrKeyPressed = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
-    {
-        hdrKeyPressed = false;
-    }
-
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {
         if (exposure > 0.0f)
-            exposure -= 0.001f;
+            exposure -= 0.1f;
         else
             exposure = 0.0f;
+        std::cout << exposure << endl;
     }
     else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
-        exposure += 0.001f;
+        exposure += 0.1f;
+        std::cout << exposure << endl;
     }
 }
 
@@ -796,11 +787,22 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
-    if(key == GLFW_KEY_M && action == GLFW_PRESS)
+    if (key == GLFW_KEY_M && action == GLFW_PRESS)
         programState->CameraMouseMovementUpdateEnabled = !programState->CameraMouseMovementUpdateEnabled;
 
-    if(key == GLFW_KEY_N && action == GLFW_PRESS)
+    if (key == GLFW_KEY_N && action == GLFW_PRESS){
         noc = !noc;
+        if (noc) {
+            hdr = true;
+        } else {
+            hdr = false;
+        }
+    }
+
+    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
+        hdr = !hdr;
+    }
+
 }
 
 

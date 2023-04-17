@@ -42,7 +42,8 @@ bool noc = false;
 
 //HDR
 bool hdr = false;
-float exposure = 1.0;
+bool bloom = true;
+float exposure = 1.2;
 
 struct PointLight {
     glm::vec3 position;
@@ -402,31 +403,9 @@ int main() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-    /*
+
     // configure floating point framebuffer
     // ------------------------------------
-    unsigned int hdrFBO;
-    glGenFramebuffers(1, &hdrFBO);
-    // create floating point color buffer
-    unsigned int colorBuffer;
-    glGenTextures(1, &colorBuffer);
-    glBindTexture(GL_TEXTURE_2D, colorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // create depth buffer (renderbuffer)
-    unsigned int rboDepth;
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
-    // attach buffers
-    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "Framebuffer not complete!" << std::endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    */
 
     unsigned int hdrFBO;
     glGenFramebuffers(1, &hdrFBO);
@@ -478,6 +457,7 @@ int main() {
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "Framebuffer not complete!" << std::endl;
     }
+    //shader setup
     hdrShader.use();
     hdrShader.setInt("hdrBuffer", 0);
     hdrShader.setInt("bloomBlur", 1);
@@ -733,29 +713,12 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
-//        hdrShader.setInt("bloom", bloom);
+        hdrShader.setInt("bloom", bloom);
         hdrShader.setInt("hdr", hdr);
         hdrShader.setFloat("exposure", exposure);
         glBindVertexArray(quadVAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindVertexArray(0);
-
-
-
-        /*
-        //HDR - renderujemo quad
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        hdrShader.use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, colorBuffer);
-        hdrShader.setInt("hdr", hdr);
-        hdrShader.setFloat("exposure", exposure);
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindVertexArray(0);
-        */
-
-
 
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
@@ -895,13 +858,19 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         noc = !noc;
         if (noc) {
             hdr = true;
+            bloom = true;
         } else {
             hdr = false;
+            bloom = false;
         }
     }
 
     if (key == GLFW_KEY_H && action == GLFW_PRESS) {
         hdr = !hdr;
+    }
+
+    if (key == GLFW_KEY_B && action == GLFW_PRESS) {
+        bloom = !bloom;
     }
 
 }

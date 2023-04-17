@@ -20,7 +20,9 @@ Video: [YouTube](https://youtu.be/H0ifbdZv2qA)
 
 ####  `N` - promena doba dana 
 
-####  `H` -  uključivanje / isključivanje HDR efekta 
+####  `H` -  uključivanje / isključivanje HDR efekta
+
+####  `B` -  uključivanje / isključivanje bloom efekta
 
 ####  `Q` - smanjivanje ekspozicije
 

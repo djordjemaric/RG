@@ -2,7 +2,7 @@
 
 Projekat za kurs Računarska grafika na Matematičkom fakultetu
 
-Implementirane oblasti : Osnovne (1-8 nedelja), Cubemaps (Grupa A), HDR (Grupa B)
+Implementirane oblasti : Osnovne (1-8 nedelja), Cubemaps (Grupa A), HDR (Grupa B), Bloom (Grupa B)
 
 U sceni su omogućena dva moda svetlosti, dan i noć.
 

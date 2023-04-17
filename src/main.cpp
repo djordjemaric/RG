@@ -478,14 +478,20 @@ int main() {
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "Framebuffer not complete!" << std::endl;
     }
-
+    hdrShader.use();
+    hdrShader.setInt("hdrBuffer", 0);
+    hdrShader.setInt("bloomBlur", 1);
+    blurShader.use();
+    blurShader.setInt("image", 0);
+    planeShader.use();
+    planeShader.setInt("texture1", 0);
     //Svetla
 
     //Podesavamo svetlo koje izvire iz vatre
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(-1.5f, 0.0f, -1.0f);
     pointLight.ambient = glm::vec3(0.95, 0.5, 0.0);
-    pointLight.diffuse = glm::vec3(20, 13, 2);
+    pointLight.diffuse = glm::vec3(4.0f, 2.6f, 0.4f);
     pointLight.specular = glm::vec3(0.5f);
 
     pointLight.constant = 1.0f;
@@ -545,6 +551,7 @@ int main() {
         planeShader.setMat4("projection", projection);
 
         glBindVertexArray(planeVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, waterTexture);
         model = glm::translate(model, glm::vec3(0.0f, 0.08f, 0.0f));
         planeShader.setMat4("model", model);

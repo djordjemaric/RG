@@ -10,6 +10,8 @@ Blending se može videti na vegetaciji.
 
 Face culling je primenjen na celu scenu, sem vegetacije.
 
+Video: [YouTube](https://youtu.be/H0ifbdZv2qA)
+
 ## Uputstvo
 
 ####  `WASD` - Kretanje po sceni 
@@ -18,7 +20,7 @@ Face culling je primenjen na celu scenu, sem vegetacije.
 
 ####  `N` - promena doba dana 
 
-####  `H` -  uključivanje/isključivanje HDR efekta 
+####  `H` -  uključivanje / isključivanje HDR efekta 
 
 ####  `Q` - smanjivanje ekspozicije
 
